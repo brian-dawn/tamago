@@ -14,9 +14,6 @@ use clap::{Parser, Subcommand};
 #[derive(Parser)]
 #[command(author, version, about, long_about = None)]
 struct Cli {
-    /// Optional name to operate on
-    name: Option<String>,
-
     #[command(subcommand)]
     command: Option<Commands>,
 }
@@ -103,9 +100,11 @@ async fn download_and_build(version: &str) -> Result<()> {
 
     configure.wait().await?;
 
+    let default_parallelism_approx = std::thread::available_parallelism()?.get();
+
     let mut make = tokio::process::Command::new("make")
         .arg("-j")
-        .arg("8")
+        .arg(format!("{}", default_parallelism_approx))
         .stdout(Stdio::null())
         .stderr(Stdio::null())
         .current_dir(&build_dir)
