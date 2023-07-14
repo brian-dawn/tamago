@@ -1,0 +1,23 @@
+[package]
+name = "tamago"
+version = "0.1.0"
+edition = "2021"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+
+reqwest = { version = "0.11", features = ["json"] }
+tokio = { version = "1", features = ["full"] }
+anyhow = "1.0.71"
+home = "0.5.5"
+
+# async-compression = { version = "0.4", features = ["tokio", "zstd"] }
+# tokio-tar = "0.3.0"
+
+decompress = "0.1.0"
+regex = "1.9.1"
+console = "0.15.7"
+indicatif = "0.17.5"
