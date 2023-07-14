@@ -64,15 +64,6 @@ pub fn find_install(minor_version: &str) -> Result<Install> {
 
 pub fn proxy_python(install_dir: &Path, args: &[&str]) -> Result<()> {
     let python_path = install_dir.join("bin").join("python3");
-    println!("{}", python_path.display());
-    // let output = Command::new(python_path)
-    //     // .args(&args)
-    //     .output()
-    //     .expect("Failed to execute command");
-
-    // println!("status: {}", output.status);
-    // println!("stdout: {}", String::from_utf8_lossy(&output.stdout));
-    // println!("stderr: {}", String::from_utf8_lossy(&output.stderr));
 
     let mut child = Command::new(python_path)
         .args(args)
