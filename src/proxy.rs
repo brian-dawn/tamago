@@ -1,7 +1,6 @@
 use indicatif::{ProgressBar, ProgressStyle};
 
 use std::collections::HashSet;
-use std::os::linux::raw;
 use std::path::PathBuf;
 use std::process::{Command, Stdio};
 use std::{io::Cursor, path::Path, time::Duration};
