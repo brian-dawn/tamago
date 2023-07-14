@@ -19,7 +19,7 @@ async fn fetch_url(url: &str, file_name: &Path) -> Result<()> {
 }
 
 async fn download_and_build(version: &str) -> Result<()> {
-    let wow = format!("https://www.python.org/ftp/python/{version}/Python-{version}.tgz");
+    let sources_url = format!("https://www.python.org/ftp/python/{version}/Python-{version}.tgz");
 
     let home_dir = home::home_dir().context("failed to find home dir")?;
     let tamago_dir = home_dir.join(".tamago");
@@ -27,13 +27,13 @@ async fn download_and_build(version: &str) -> Result<()> {
 
     let build_dir = tamago_dir.join("build");
     let install_dir = tamago_dir.join("install").join(version);
-    let destination = sources_dir.join(wow.split("/").last().context("invalid url")?);
+    let destination = sources_dir.join(sources_url.split("/").last().context("invalid url")?);
 
     // Make all the directories if they don't exist.
     std::fs::create_dir_all(&sources_dir)?;
     std::fs::create_dir_all(&build_dir)?;
 
-    fetch_url(&wow, &destination).await?;
+    fetch_url(&sources_url, &destination).await?;
 
     let decompressor = decompress::Decompress::default();
     decompressor.decompress(
@@ -92,6 +92,10 @@ async fn download_and_build(version: &str) -> Result<()> {
 
     make_install.wait().await?;
 
+    // Clear out the sources and the build directory
+    std::fs::remove_dir_all(&sources_dir)?;
+    std::fs::remove_dir_all(&build_dir)?;
+
     let _ = spinner_task.abort();
 
     Ok(())
@@ -99,8 +103,51 @@ async fn download_and_build(version: &str) -> Result<()> {
 
 #[tokio::main]
 async fn main() -> Result<()> {
-    let version = "3.8.12";
+    let args: Vec<String> = std::env::args().skip(1).collect();
+
+    let version = "3.11.3";
     download_and_build(version).await?;
+
+    let home_dir = home::home_dir().context("failed to find home dir")?;
+    let tamago_dir = home_dir.join(".tamago");
+    let sources_dir = tamago_dir.join("sources");
+
+    let build_dir = tamago_dir.join("build");
+    let install_dir = tamago_dir.join("install").join(version);
+
+    use std::process::Command;
+
+    // Assume that python_path is a string containing the path to the desired Python interpreter,
+    // and that args is a Vec<String> containing the arguments passed by the user.
+    let python_path = install_dir.join("bin").join("python3");
+    println!("{}", python_path.display());
+    // let output = Command::new(python_path)
+    //     // .args(&args)
+    //     .output()
+    //     .expect("Failed to execute command");
+
+    // println!("status: {}", output.status);
+    // println!("stdout: {}", String::from_utf8_lossy(&output.stdout));
+    // println!("stderr: {}", String::from_utf8_lossy(&output.stderr));
+
+    let mut child = Command::new(python_path)
+        .args(&args)
+        .stdin(Stdio::inherit())
+        .stdout(Stdio::inherit())
+        .stderr(Stdio::inherit())
+        .spawn()?;
+
+    let exit_status = child.wait()?;
+
+    if exit_status.success() {
+        println!("Python interpreter exited successfully");
+    } else {
+        if let Some(code) = exit_status.code() {
+            println!("Python interpreter exited with status code {}", code);
+        } else {
+            println!("Python interpreter process terminated by signal");
+        }
+    }
 
     Ok(())
 }
