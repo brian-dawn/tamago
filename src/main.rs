@@ -39,8 +39,6 @@ enum Commands {
 // build relevant python versions automatically, allow fetching updates
 // act as a proxy for a python version based on the .python-version file or the pyproject.toml file.
 
-
-
 #[tokio::main]
 async fn main() -> Result<()> {
     let args: Vec<String> = std::env::args().skip(1).collect();
@@ -58,32 +56,16 @@ async fn main() -> Result<()> {
             version,
             raw_remaining_args,
         }) => {
-            let home_dir = home::home_dir().context("failed to find home dir")?;
-            let install_dir = home_dir.join(".tamago").join("install").join(&version);
+            let latest = proxy::find_install(&version)?;
 
             let args: Vec<&str> = raw_remaining_args.iter().map(AsRef::as_ref).collect();
 
-            proxy::proxy_python(&install_dir, &args)?;
+            proxy::proxy_python(&latest.path, &args)?;
 
             return Ok(());
         }
         None => {}
     }
-
-    let version = "3.11.3";
-    // download_and_build(version).await?;
-
-    let home_dir = home::home_dir().context("failed to find home dir")?;
-    let tamago_dir = home_dir.join(".tamago");
-    let sources_dir = tamago_dir.join("sources");
-
-    let build_dir = tamago_dir.join("build");
-    let install_dir = tamago_dir.join("install").join(version);
-
-    // Assume that python_path is a string containing the path to the desired Python interpreter,
-    // and that args is a Vec<String> containing the arguments passed by the user.
-
-    // Exit with the same code as the Python process.
 
     Ok(())
 }

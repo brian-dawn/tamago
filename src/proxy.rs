@@ -1,5 +1,6 @@
 use indicatif::{ProgressBar, ProgressStyle};
 
+use std::collections::HashSet;
 use std::os::linux::raw;
 use std::path::PathBuf;
 use std::process::{Command, Stdio};
@@ -31,42 +32,35 @@ fn list_local_installs() -> Result<Vec<PathBuf>> {
     Ok(versions)
 }
 
-pub fn list_latest_installs() -> Result<Vec<Install>> {
+fn list_latest_installs() -> Result<Vec<Install>> {
     let installs = list_local_installs()?;
 
-    // For each version, find the latest patch.
-    let mut versions = vec![];
-
-    for install in installs {
-        let mut version = install.file_name().unwrap().to_str().unwrap().to_string();
-
-        let mut version_parts = version.splitn(2, ".");
-
-        let major = version_parts.next().unwrap();
-        let minor = version_parts.next().unwrap();
-        let patch = version_parts.next().unwrap();
-
-        let mut patch_parts = patch.splitn(2, "-");
-
-        let patch = patch_parts.next().unwrap();
-        let patch = patch.parse::<u32>().unwrap();
-
-        let patch = patch_parts.next().unwrap();
-        let patch = patch.parse::<u32>().unwrap();
-
-        version = format!("{}.{}.{}", major, minor, patch);
-
-        versions.push(Install {
-            version,
-            path: install,
-        });
+    let mut latest_installs = vec![];
+    for install in &installs {
+        let version = install.file_name().unwrap().to_str().unwrap().to_string();
+        let install = Install {
+            version: version.clone(),
+            path: install.clone(),
+        };
+        latest_installs.push(install);
     }
 
-    Ok(versions)
+    // TODO: Filter out any old patch versions.
+
+    Ok(latest_installs)
 }
 
+pub fn find_install(minor_version: &str) -> Result<Install> {
+    // Find and return the matching install.
+    let installs = list_latest_installs()?;
+    for install in installs {
+        if install.version.starts_with(minor_version) {
+            return Ok(install);
+        }
+    }
 
-
+    anyhow::bail!("failed to find install for {}", minor_version);
+}
 
 pub fn proxy_python(install_dir: &Path, args: &[&str]) -> Result<()> {
     let python_path = install_dir.join("bin").join("python3");
