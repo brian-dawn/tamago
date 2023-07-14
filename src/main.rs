@@ -90,7 +90,8 @@ async fn download_and_build(version: &str) -> Result<()> {
     });
 
     let mut configure = tokio::process::Command::new("./configure")
-        .arg("--enable-optimizations")
+        // Disabled for now to increase build speed.
+        // .arg("--enable-optimizations")
         .arg(format!("--prefix={}", install_dir.display()))
         .current_dir(&build_dir)
         .stdout(Stdio::null())
