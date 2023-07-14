@@ -21,3 +21,5 @@ decompress = "0.1.0"
 regex = "1.9.1"
 console = "0.15.7"
 indicatif = "0.17.5"
+
+clap = { version = "4.3", features = ["derive"] }
