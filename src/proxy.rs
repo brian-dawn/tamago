@@ -31,7 +31,7 @@ fn list_local_installs() -> Result<Vec<PathBuf>> {
     Ok(versions)
 }
 
-fn list_latest_installs() -> Result<Vec<Install>> {
+pub fn list_latest_installs() -> Result<Vec<Install>> {
     let installs = list_local_installs()?;
 
     let mut latest_installs = vec![];
