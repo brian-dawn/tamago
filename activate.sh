@@ -1,13 +1,12 @@
+ORIGINAL_PATH=$PATH
 
 function set_python_version() {
     local version_path
     version_path=$(tamago find 2>/dev/null)
     if [[ $? -eq 0 ]] && [[ -n "$version_path" ]]; then
         PATH="${version_path}/bin:$PATH"
-        alias python="${version_path}/bin/python3"
     else
-        # Set default Python path here
-        PATH="/usr/local/bin:$PATH"
+        PATH=$ORIGINAL_PATH
     fi
 }
 

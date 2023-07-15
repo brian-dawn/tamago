@@ -140,6 +140,11 @@ pub async fn download_and_build(version: &str) -> Result<()> {
 
     make.wait().await?;
 
+    // Clear the existing directory if it exists.
+    if install_dir.exists() {
+        std::fs::remove_dir_all(&install_dir)?;
+    }
+
     let mut make_install = tokio::process::Command::new("make")
         .arg("install")
         .current_dir(&build_dir)
@@ -149,6 +154,16 @@ pub async fn download_and_build(version: &str) -> Result<()> {
         .context("failed to run make install")?;
 
     make_install.wait().await?;
+
+    // Create a symlink from python3 to python and pip3 to pip
+    let python_path = install_dir.join("bin").join("python3");
+    let pip_path = install_dir.join("bin").join("pip3");
+
+    let python_symlink_path = install_dir.join("bin").join("python");
+    let pip_symlink_path = install_dir.join("bin").join("pip");
+
+    std::os::unix::fs::symlink(python_path, python_symlink_path)?;
+    std::os::unix::fs::symlink(pip_path, pip_symlink_path)?;
 
     // Clear out the sources and the build directory
     std::fs::remove_dir_all(&sources_dir)?;
