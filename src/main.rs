@@ -11,6 +11,7 @@ use anyhow::{Context, Result};
 use clap::{Parser, Subcommand};
 
 pub mod build_python;
+pub mod env_picker;
 pub mod proxy;
 
 #[derive(Parser)]
@@ -22,7 +23,6 @@ struct Cli {
 
 #[derive(Subcommand)]
 enum Commands {
-    /// does testing things
     Run {
         /// python version to use, e.g. 3.11.3
         version: String,
@@ -31,8 +31,11 @@ enum Commands {
         raw_remaining_args: Vec<String>,
     },
 
+    /// Returns the python install path based on the current project.
+    Find,
+
     /// build a python version from source
-    Build {},
+    Build,
 }
 
 // build relevant python versions automatically, allow fetching updates
@@ -45,8 +48,16 @@ async fn main() -> Result<()> {
     let cli = Cli::parse();
 
     match cli.command {
-        Some(Commands::Build {}) => {
+        Some(Commands::Build) => {
             build_python::download_and_build_all().await?;
+
+            return Ok(());
+        }
+
+        Some(Commands::Find) => {
+            let install = env_picker::find_project_python_version()?;
+
+            print!("{}", install.path.display());
 
             return Ok(());
         }
