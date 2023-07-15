@@ -38,13 +38,8 @@ enum Commands {
     Build,
 }
 
-// build relevant python versions automatically, allow fetching updates
-// act as a proxy for a python version based on the .python-version file or the pyproject.toml file.
-
 #[tokio::main]
 async fn main() -> Result<()> {
-    let args: Vec<String> = std::env::args().skip(1).collect();
-
     let cli = Cli::parse();
 
     match cli.command {
