@@ -28,4 +28,3 @@ We explicitely do not care about patch versions and always attempt to work with 
 ## Planned Features
 
 - Use MUSL Python builds
-- Parse pyproject.toml files to auto select latest patch version.
