@@ -8,7 +8,7 @@ Install it:
 
     cargo install --path .
 
-Build Python versions into a sandbox:
+Build Python versions into a sandbox with the latest patch versions:
 
     tamago build
 
@@ -27,6 +27,5 @@ We explicitely do not care about patch versions and always attempt to work with 
 
 ## Planned Features
 
-- Build Python from source
 - Use MUSL Python builds
-- Parse .python-version files or pyproject.toml files to auto select latest patch version.
+- Parse pyproject.toml files to auto select latest patch version.
