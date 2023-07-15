@@ -125,7 +125,11 @@ pub async fn download_and_build(version: &str) -> Result<()> {
         .spawn()
         .context("failed to run configure")?;
 
-    configure.wait().await?;
+    let status = configure.wait().await?;
+
+    if !status.success() {
+        anyhow::bail!("failed to run configure");
+    }
 
     let default_parallelism_approx = std::thread::available_parallelism()?.get();
 
@@ -138,7 +142,10 @@ pub async fn download_and_build(version: &str) -> Result<()> {
         .spawn()
         .context("failed to run make")?;
 
-    make.wait().await?;
+    let status = make.wait().await?;
+    if !status.success() {
+        anyhow::bail!("failed to run make");
+    }
 
     // Clear the existing directory if it exists.
     if install_dir.exists() {
@@ -153,7 +160,11 @@ pub async fn download_and_build(version: &str) -> Result<()> {
         .spawn()
         .context("failed to run make install")?;
 
-    make_install.wait().await?;
+    let status = make_install.wait().await?;
+
+    if !status.success() {
+        anyhow::bail!("failed to run make install");
+    }
 
     // Create a symlink from python3 to python and pip3 to pip
     let python_path = install_dir.join("bin").join("python3");
