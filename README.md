@@ -19,6 +19,14 @@ Activate auto selection:
 Now you can cd into a directory with a `.python-version` file and
 it will auto select the relevant python version (ignoring the patch version).
 
+You can also proxy any commands to a python version with:
+
+    tamago run 3.10
+
+e.g:
+
+    tamago run 3.10 -m venv .venv
+
 ## With Poetry
 
 Tell poetry to use a python version that matches the pyproject.toml file:
