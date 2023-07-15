@@ -6,6 +6,7 @@ function set_python_version() {
     if [[ $? -eq 0 ]] && [[ -n "$version_path" ]]; then
         PATH="${version_path}/bin:$PATH"
     else
+        # TODO: probably just strip tamago out
         PATH=$ORIGINAL_PATH
     fi
 }

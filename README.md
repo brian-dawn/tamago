@@ -1,4 +1,4 @@
-# Tamago
+# Tamago 🥚
 
 TL;DR just use pyenv. This is just a playground.
 
