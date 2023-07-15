@@ -1,4 +1,6 @@
 use console::Term;
+use futures::stream::StreamExt;
+
 use indicatif::{ProgressBar, ProgressStyle};
 use regex::Regex;
 
@@ -67,9 +69,17 @@ async fn fetch_url(url: &str, file_name: &Path) -> Result<()> {
 pub async fn download_and_build_all() -> Result<()> {
     let versions = fetch_python_versions().await?;
     let patches = find_latest_patches(&versions)?;
-    for patch in patches.iter() {
-        download_and_build(patch).await?;
-    }
+
+    futures::stream::iter(patches)
+        .for_each_concurrent(None, |patch| async move {
+            let patch_clone = patch.clone();
+            let fut = download_and_build(&patch_clone);
+            match fut.await {
+                Ok(_) => (),
+                Err(e) => eprintln!("Error when downloading and building: {:?}", e),
+            }
+        })
+        .await;
 
     Ok(())
 }
