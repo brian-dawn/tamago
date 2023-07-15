@@ -4,15 +4,15 @@ use anyhow::Result;
 
 use crate::proxy::Install;
 
-fn parse_python_version(version: &str) -> Result<(u32, u32, u32)> {
+/// Parse a python version string into major and minor version numbers.
+fn parse_python_version(version: &str) -> Result<(u32, u32)> {
     let mut version = version.trim().split(".");
     let major = version.next().unwrap().parse::<u32>()?;
     let minor = version.next().unwrap().parse::<u32>()?;
-    let patch = version.next().unwrap().parse::<u32>()?;
-    Ok((major, minor, patch))
+    Ok((major, minor))
 }
 
-fn parse_python_version_file(version_file: &Path) -> Result<(u32, u32, u32)> {
+fn parse_python_version_file(version_file: &Path) -> Result<(u32, u32)> {
     let version = std::fs::read_to_string(version_file)?;
     parse_python_version(&version)
 }
