@@ -34,6 +34,9 @@ enum Commands {
     /// Returns the python install path based on the current project.
     Find,
 
+    /// Returns the path of the tamago activate shell script.
+    Activate,
+
     /// build a python version from source
     Build,
 }
@@ -55,6 +58,25 @@ async fn main() -> Result<()> {
             print!("{}", install.path.display());
 
             return Ok(());
+        }
+
+        Some(Commands::Activate) => {
+            // Make the tamago directory if it doesn't exist.
+            let home_dir = home::home_dir().context("failed to find home dir")?;
+            let tamago_dir = home_dir.join(".tamago");
+
+            if !tamago_dir.exists() {
+                std::fs::create_dir(&tamago_dir).context("failed to create tamago dir")?;
+            }
+
+            let activate_path = tamago_dir.join("activate");
+            let contents = include_str!("../activate.sh");
+            if !activate_path.exists() {
+                std::fs::write(&activate_path, contents)
+                    .context("failed to write activate file")?;
+            }
+
+            print!("{}", activate_path.display());
         }
 
         Some(Commands::Run {
