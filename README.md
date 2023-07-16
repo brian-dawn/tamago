@@ -4,6 +4,9 @@ TL;DR just use pyenv. This is just a playground.
 
 ## Requirements
 
+Till we have binaries getting built you will need to build tamago yourself. This requires
+[rust/cargo](https://rustup.rs/):
+
 We assume you have a typical build environment installed. e.g.
 
     apt-get install make build-essential libssl-dev libreadline-dev libsqlite3-dev
