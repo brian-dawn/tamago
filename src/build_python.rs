@@ -94,6 +94,9 @@ pub async fn download_and_build(version: &str) -> Result<()> {
         .template(&template)?;
     let spinner = ProgressBar::new_spinner().with_style(spinner_style);
 
+    // Wipe the build directory if it exists.
+    std::fs::remove_dir_all(&build_dir).ok();
+
     // Make all the directories if they don't exist.
     std::fs::create_dir_all(&sources_dir)?;
     std::fs::create_dir_all(&build_dir)?;
@@ -115,35 +118,38 @@ pub async fn download_and_build(version: &str) -> Result<()> {
         }
     });
 
-    let mut configure = tokio::process::Command::new("./configure")
+    let configure = tokio::process::Command::new("./configure")
         // Disabled for now to increase build speed.
         // .arg("--enable-optimizations")
         .arg(format!("--prefix={}", install_dir.display()))
+        .arg("--with-ssl")
         .current_dir(&build_dir)
         .stdout(Stdio::null())
-        .stderr(Stdio::null())
+        .stderr(Stdio::piped())
         .spawn()
         .context("failed to run configure")?;
 
-    let status = configure.wait().await?;
+    let output = configure.wait_with_output().await?;
 
-    if !status.success() {
+    if !output.status.success() {
+        eprintln!("{}", String::from_utf8_lossy(&output.stderr));
         anyhow::bail!("failed to run configure");
     }
 
     let default_parallelism_approx = std::thread::available_parallelism()?.get();
 
-    let mut make = tokio::process::Command::new("make")
+    let make = tokio::process::Command::new("make")
         .arg("-j")
         .arg(format!("{}", default_parallelism_approx))
         .stdout(Stdio::null())
-        .stderr(Stdio::null())
+        .stderr(Stdio::piped())
         .current_dir(&build_dir)
         .spawn()
         .context("failed to run make")?;
 
-    let status = make.wait().await?;
-    if !status.success() {
+    let output = make.wait_with_output().await?;
+    if !output.status.success() {
+        eprintln!("{}", String::from_utf8_lossy(&output.stderr));
         anyhow::bail!("failed to run make");
     }
 
@@ -152,17 +158,18 @@ pub async fn download_and_build(version: &str) -> Result<()> {
         std::fs::remove_dir_all(&install_dir)?;
     }
 
-    let mut make_install = tokio::process::Command::new("make")
+    let make_install = tokio::process::Command::new("make")
         .arg("install")
         .current_dir(&build_dir)
         .stdout(Stdio::null())
-        .stderr(Stdio::null())
+        .stderr(Stdio::piped())
         .spawn()
         .context("failed to run make install")?;
 
-    let status = make_install.wait().await?;
+    let output = make_install.wait_with_output().await?;
 
-    if !status.success() {
+    if !output.status.success() {
+        eprintln!("{}", String::from_utf8_lossy(&output.stderr));
         anyhow::bail!("failed to run make install");
     }
 
