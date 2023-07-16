@@ -2,6 +2,16 @@
 
 TL;DR just use pyenv. This is just a playground.
 
+## Requirements
+
+We assume you have a typical build environment installed. e.g.
+
+    apt-get install make build-essential libssl-dev libreadline-dev libsqlite3-dev
+
+Or on Homebrew:
+
+    brew install openssl readline sqlite3
+
 ## Usage
 
 Install it:
