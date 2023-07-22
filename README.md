@@ -40,6 +40,12 @@ e.g:
 
     tamago run 3.10 -m venv .venv
 
+### Set a default python interpreter
+
+You can set a default python version to use with:
+
+    tamago default 3.11
+
 ## With Poetry
 
 Tell poetry to use a python version that matches the pyproject.toml file:
