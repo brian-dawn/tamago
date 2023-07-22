@@ -78,7 +78,7 @@ fn choose_install_from_semver(semver: &str) -> Result<Install> {
 }
 
 /// Parse a python version string into major and minor version numbers.
-fn parse_python_version(version: &str) -> Result<(u64, u64)> {
+pub fn parse_python_version(version: &str) -> Result<(u64, u64)> {
     let mut version = version.trim().split(".");
     let major = version.next().unwrap().parse::<u64>()?;
     let minor = version.next().unwrap().parse::<u64>()?;
@@ -95,23 +95,26 @@ fn parse_python_version_triplet(version: &str) -> Result<(u64, u64, u64)> {
 }
 
 fn parse_python_version_file(version_file: &Path) -> Result<(u64, u64)> {
+    // TODO: Look in above directories.
+
     let version = std::fs::read_to_string(version_file)?;
     parse_python_version(&version)
 }
 
-pub fn find_project_python_version() -> Result<Install> {
-    let project_dir = std::env::current_dir()?;
-    let version_file = project_dir.join(".python-version");
+fn load_default_file() -> Result<Install> {
+    // Fall back to the default python version if it exists.
+    let home_dir = home::home_dir().context("failed to find home dir")?;
+    let tamago_dir = home_dir.join(".tamago");
+    let default_path = tamago_dir.join("default");
 
-    let python_version_triplet = parse_python_version_file(&version_file);
+    let (major, minor) = parse_python_version_file(&default_path)?;
+    crate::proxy::find_install(&format!("{}.{}", major, minor))
+}
 
-    match python_version_triplet {
-        Ok(triplet) => return crate::proxy::find_install(&format!("{}.{}", triplet.0, triplet.1)),
-        Err(_) => {}
-    }
+fn load_from_pyproject(project_dir: &Path) -> Result<Install> {
+    // TODO: Look in above directories.
 
     // Attempt to load from pyproject.toml.
-
     let pyproject = parse_pyproject(&project_dir)?;
     let semver = pyproject
         .tool
@@ -123,4 +126,22 @@ pub fn find_project_python_version() -> Result<Install> {
         .context("no python field")?;
 
     choose_install_from_semver(&semver)
+}
+
+fn load_from_version_file(project_dir: &Path) -> Result<Install> {
+    let version_file = project_dir.join(".python-version");
+    let (major, minor) = parse_python_version_file(&version_file)?;
+    crate::proxy::find_install(&format!("{}.{}", major, minor))
+}
+
+pub fn find_project_python_version() -> Result<Install> {
+    let project_dir = std::env::current_dir()?;
+
+    // First attempt to load from version, then pyproject, then default.
+    let install = load_from_version_file(&project_dir)
+        .or_else(|_| load_from_pyproject(&project_dir))
+        .or_else(|_| load_default_file())
+        .context("failed to find a python version")?;
+
+    Ok(install)
 }

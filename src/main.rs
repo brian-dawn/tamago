@@ -23,13 +23,17 @@ struct Cli {
 
 #[derive(Subcommand)]
 enum Commands {
+    /// Run a python binary for a specific version.
     Run {
-        /// python version to use, e.g. 3.11.3
+        /// Python version to use, e.g. 3.11
         version: String,
 
         #[clap(trailing_var_arg = true, allow_hyphen_values = true)]
         raw_remaining_args: Vec<String>,
     },
+
+    /// Sets a default python version to use, e.g. 3.11
+    Default { version: String },
 
     /// Returns the python install path based on the current project.
     Find,
@@ -48,6 +52,28 @@ async fn main() -> Result<()> {
     match cli.command {
         Some(Commands::Build) => {
             build_python::download_and_build_all().await?;
+
+            return Ok(());
+        }
+
+        Some(Commands::Default { version }) => {
+            // Make sure we can find it first.
+            let (major, minor) = env_picker::parse_python_version(&version)?;
+            let found_install = proxy::find_install(&format!("{}.{}", major, minor))?;
+
+            let home_dir = home::home_dir().context("failed to find home dir")?;
+            let tamago_dir = home_dir.join(".tamago");
+
+            let default_path = tamago_dir.join("default");
+            let default_contents = format!("{}.{}", major, minor);
+            std::fs::write(&default_path, default_contents)?;
+
+            println!(
+                "setting default python version to {}.{} at {}",
+                major,
+                minor,
+                found_install.path.display()
+            );
 
             return Ok(());
         }
