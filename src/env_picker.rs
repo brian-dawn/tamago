@@ -26,9 +26,8 @@ struct PyProjectToml {
     tool: Tool,
 }
 
-fn parse_pyproject(project_dir: &Path) -> Result<PyProjectToml> {
-    let pyproject = project_dir.join("pyproject.toml");
-    let pyproject = std::fs::read_to_string(pyproject)?;
+fn parse_pyproject(pyproject_path: &Path) -> Result<PyProjectToml> {
+    let pyproject = std::fs::read_to_string(pyproject_path)?;
     let pyproject: PyProjectToml = toml::from_str(&pyproject)?;
     Ok(pyproject)
 }
@@ -112,10 +111,21 @@ fn load_default_file() -> Result<Install> {
 }
 
 fn load_from_pyproject(project_dir: &Path) -> Result<Install> {
-    // TODO: Look in above directories.
+    let mut dir = project_dir.to_path_buf();
+
+    let pyproject = loop {
+        let pyproject = dir.join("pyproject.toml");
+        if pyproject.exists() {
+            break pyproject;
+        }
+
+        if !dir.pop() {
+            anyhow::bail!("failed to find a python version");
+        }
+    };
 
     // Attempt to load from pyproject.toml.
-    let pyproject = parse_pyproject(&project_dir)?;
+    let pyproject = parse_pyproject(&pyproject)?;
     let semver = pyproject
         .tool
         .poetry
@@ -129,7 +139,19 @@ fn load_from_pyproject(project_dir: &Path) -> Result<Install> {
 }
 
 fn load_from_version_file(project_dir: &Path) -> Result<Install> {
-    let version_file = project_dir.join(".python-version");
+    let mut dir = project_dir.to_path_buf();
+
+    let version_file = loop {
+        let version_file = dir.join(".python-version");
+        if version_file.exists() {
+            break version_file;
+        }
+
+        if !dir.pop() {
+            anyhow::bail!("failed to find a python version");
+        }
+    };
+
     let (major, minor) = parse_python_version_file(&version_file)?;
     crate::proxy::find_install(&format!("{}.{}", major, minor))
 }
