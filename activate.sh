@@ -4,7 +4,12 @@ function set_python_version() {
     local version_path
     version_path=$(tamago find 2>/dev/null)
     if [[ $? -eq 0 ]] && [[ -n "$version_path" ]]; then
-        PATH="${version_path}/bin:$PATH"
+        # Only do this if we are not in a virtual environment.
+        # TODO: There might be a cleaner way of doing this. I think
+        #       I see why pyenv intercepts python and pip now.
+        if [[ -z "$VIRTUAL_ENV" ]]; then
+            PATH="${version_path}/bin:$PATH"
+        fi
     else
         # TODO: probably just strip tamago out
         PATH=$ORIGINAL_PATH
