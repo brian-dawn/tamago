@@ -10,7 +10,7 @@ use tokio::task::JoinHandle;
 
 use anyhow::{Context, Result};
 
-const PYTHON_VERSIONS: [&str; 4] = ["3.8", "3.9", "3.10", "3.11"];
+const PYTHON_VERSIONS: [&str; 5] = ["3.8", "3.9", "3.10", "3.11", "3.12"];
 
 pub async fn fetch_python_versions() -> Result<HashSet<String>> {
     let mut versions = HashSet::new();
