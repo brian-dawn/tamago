@@ -59,7 +59,7 @@ Now you can do the normal poetry things:
 
 ## Features
 
-Build Python versions 3.8, 3.9, 3.10, and 3.11 on your system with one command.
+Build Python versions 3.8, 3.9, 3.10, 3.11, and 3.12 on your system with one command.
 
 We explicitely do not care about patch versions and always attempt to work with the latest available.
 
